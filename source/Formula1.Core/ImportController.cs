@@ -105,7 +105,7 @@ namespace Formula1.Core
         {
             string firstName = result.Element("Driver")?.Element("GivenName")?.Value;
             string lastName = result.Element("Driver")?.Element("FamilyName")?.Value;
-            string fullName = $"{firstName} {lastName}";
+            string fullName = $"{lastName} {firstName}";
 
             if(Drivers.ContainsKey(fullName))
             {

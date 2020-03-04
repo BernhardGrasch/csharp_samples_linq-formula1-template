@@ -43,7 +43,7 @@ namespace Formula1.CoreTest
             // Lade Verstappens Platzierungen in ein anonymes Objekt { City, Position }
             // Sortiert nach der Rennnummer
             var results = ImportController.LoadResultsFromXmlIntoCollections()
-                .Where(r => r.Driver.Name == "Max Verstappen")
+                .Where(r => r.Driver.Name == "Verstappen Max")
                 .OrderBy(r => r.Race.Number)
                 .Select(r => new
                 {
@@ -54,8 +54,9 @@ namespace Formula1.CoreTest
 
             Assert.AreEqual(15, results.Count);
             Assert.AreEqual(5, results[0].Position);
-            Assert.AreEqual(18, results[2].Position);
-            Assert.AreEqual(20, results[8].Position);
+            Assert.AreEqual("Melbourne", results[0].City);
+            Assert.AreEqual(1, results[14].Position);
+            Assert.AreEqual("Kuala Lumpur", results[14].City);
             Assert.AreEqual("Spielburg", results[8].City);
         }
     }
