@@ -13,6 +13,10 @@ namespace Formula1.Core
     /// </summary>
     public static class ImportController
     {
+        public static IDictionary<string, Driver> Drivers { get; set; }
+        public static IDictionary<string, Team> Teams { get; set; }
+        public static IEnumerable<Result> Results { get; set; }
+        public static IEnumerable<Race> Races { get; set; }
         /// <summary>
         /// Daten der Rennen werden aus der
         /// XML-Datei ausgelesen und in die Races-Collection gespeichert.
@@ -21,7 +25,32 @@ namespace Formula1.Core
         /// </summary>
         public static IEnumerable<Race> LoadRacesFromRacesXml()
         {
-            throw new NotImplementedException();
+            List<Race> races = new List<Race>();
+            string racesPath = MyFile.GetFullNameInApplicationTree("Races.xml");
+            XElement xElement = XDocument.Load(racesPath).Root;
+
+            if(xElement != null)
+            {
+                races =
+                    xElement.Elements("Race")
+                    .Select(race => new Race
+                    {
+                        Number = (int)race.Attribute("round"),
+                        Date = (DateTime)race.Element("Date"),
+                        Country = (string)race.Element("Circuit")
+                        ?.Element("Location")
+                        ?.Element("Country")?.Value,
+                        City = race.Element("Circuit")
+                        ?.Element("Location")
+                        ?.Element("Locality")?.Value
+                    })
+                    .ToList();
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(xElement));
+            }
+            return races;
         }
 
         /// <summary>
@@ -30,9 +59,70 @@ namespace Formula1.Core
         /// </summary>
         public static IEnumerable<Result> LoadResultsFromXmlIntoCollections()
         {
-            throw new NotImplementedException();
+            Races = LoadRacesFromRacesXml();
+            Drivers = new Dictionary<string, Driver>();
+            Teams = new Dictionary<string, Team>();
+            Results = new List<Result>();
+            string resultsPath = MyFile.GetFullNameInApplicationTree("Results.xml");
+            XElement xElement = XDocument.Load(resultsPath).Root;
+
+            if(xElement != null)
+            {
+                Results = xElement.Elements("Race").Elements("ResultsList").Elements("Result")
+                    .Select(result => new Result
+                    {
+                        Race = GetRace(result),
+                        Driver = GetDriver(result),
+                        Team = GetTeam(result),
+                        Position = (int)result.Attribute("position"),
+                        Points = (int)result.Attribute("points")
+                    })
+                    .ToList();
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(xElement));
+            }
+            return Results;
         }
 
+        private static Team GetTeam(XElement result)
+        {
+            string teamName = result.Element("Constructor")?.Element("Name")?.Value;
 
+            if(Teams.ContainsKey(teamName))
+            {
+                return Teams[teamName];
+            }
+            else
+            {
+                Teams[teamName] = new Team(teamName);
+                return Teams[teamName];
+            }
+        }
+
+        private static Driver GetDriver(XElement result)
+        {
+            string firstName = result.Element("Driver")?.Element("GivenName")?.Value;
+            string lastName = result.Element("Driver")?.Element("FamilyName")?.Value;
+            string fullName = $"{firstName} {lastName}";
+
+            if(Drivers.ContainsKey(fullName))
+            {
+                return Drivers[fullName];
+            }
+            else
+            {
+                Drivers[fullName] = new Driver(fullName);
+                return Drivers[fullName];
+            }
+        }
+
+        private static Race GetRace(XElement result)
+        {
+            int raceNumber = (int)result.Parent?.Parent?.Attribute("round");
+
+            return Races.SingleOrDefault(r => r.Number == raceNumber);
+        }
     }
 }

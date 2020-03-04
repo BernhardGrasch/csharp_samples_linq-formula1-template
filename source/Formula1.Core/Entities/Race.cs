@@ -9,5 +9,12 @@ namespace Formula1.Core.Entities
     {
         public string City { get; set; }
         public int Number { get; set; }
+        public DateTime Date { get; set; }
+        public string Country { get; set; }
+
+        public override string ToString()
+        {
+            return $"{City}, {Number}, {Date}, {Country}";
+        }
     }
 }
